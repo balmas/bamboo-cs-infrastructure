@@ -1,7 +1,8 @@
 $(window).load(function () {
 	// Creates canvas 320 × 200 at 10, 50
-	var paper = Raphael(10, 50, 1000, 600);
-
+	var paper = Raphael("canvas", 1000, 600);
+  $("#canvas").initZoom(100);
+  
     $.getJSON('data.json', function(data){
         $.each(data, function(key, val) {
             $.each(val, function(a, b) {
