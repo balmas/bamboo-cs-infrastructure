@@ -2,15 +2,20 @@ $(window).load(function () {
 	// Creates canvas 320 × 200 at 10, 50
 	window.canvas = Raphael("canvas", 1000, 600);
   
-  $.getJSON('../html/data.json', function(data){
-      $.each(data, function(key, val) {
+  $.getJSON('../html/data.json', function(data){ 
+    canvas.data = data;
+    canvas.draw();
+  });
+
+  canvas.draw = function(){
+      $.each(this.data, function(key, val) {
           $.each(val, function(a, b) {
               $.each(b, function(c, d) {
 
                   x = d['x'] + 1;
                   y = d['y'] + 1;
 
-                  var circle = paper.circle(x*500, y*300, 2);
+                  var circle = canvas.circle(x*500, y*300, 2);
                   circle.attr("stroke", d['color']);
 				
 				circle.node.id= d['id'];
@@ -18,10 +23,11 @@ $(window).load(function () {
               });
           });
       });
-  });
+  }
   
-  window.canvas.zoom = function(){
-    
+  
+  canvas.zoom = function(){
+    this.draw();
   }
 
 });
