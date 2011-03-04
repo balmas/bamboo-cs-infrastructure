@@ -1,15 +1,18 @@
 <html>
   <head>
       <meta charset="utf-8">
-      <title>Woodchipper using Raphaël</title>
+      <meta http-equiv="Cache-Control" content="no-cache">
+      <title>Woodchipper (not) using Raphaël</title>
       <script src="../js/jquery.js"></script>
-      <script src="../js/raphael.js"></script>
       <script src="../js/woodchipper.js"></script>
       <link href="../css/index.css" media="screen" rel="stylesheet" type="text/css" />
   </head>
   
   <body>
     <h2>Woodchipper using Raphaël</h2>
-    <div class="display_port">&nbsp;</div>
+    <!-- <div id="buttons">
+      <input type="checkbox" value=0 onchange="setSelectionMode(this)" /> Selection Mode
+    </div> -->
+    <canvas class="display_port" onselectstart="return false;" ondragstart="return false;">&nbsp;</canvas>
   </body>
 </html>

@@ -7,10 +7,15 @@ $(function() {
     $.extend(this, {
       jQ: null,
       data: null,
-      drawer:null,
+      ctx:null,
+      non_drag_distance: 5,
+      circle_size: 2,
+      drag_start_x: 0,
+      drag_start_y: 0,
       width: 0,
       height: 0,
       select_box: null,
+      data_point_array: [],
       
         init: function(){
           // set up display drawing.
@@ -18,13 +23,28 @@ $(function() {
           this.width = this.jQ.width();
           this.height = this.jQ.height();
           
-          // create a Raphael object based on the element
-          this.drawer = Raphael(this, this.width, this.height);
+          // element has to be a <canvas>
+          this.ctx = this.getContext("2d");
           
-          // set up interaction.
+          // set up selection interaction.
+          this.jQ.after($('<div class="select_box" />'));
           this.jQ.mousedown(this.mousedown);
-          this.jQ.append($('<div class="select_box" />'));
-          this.select_box = $('.select_box', this);
+          this.select_box = $('.select_box', this.parent);
+          var canvas = this;
+          this.select_box.mouseup(function(event){
+            canvas.jQ.unbind("mousemove");
+            canvas.select_box.hide();
+            var selected_rect = {
+              "left": canvas.drag_start_x,
+              "top": canvas.drag_start_y,
+              "right": canvas.drag_start_x + canvas.select_box.width(),
+              "bottom": canvas.drag_start_y + canvas.select_box.height()
+            };
+            alert(unpack(selected_rect));
+          });
+          
+          // set up click interaction (just one click handler for all points in canvas)
+          this.jQ.click(this.click);
           
           // get initial data.
           this.get_data();
@@ -34,6 +54,7 @@ $(function() {
           var display_port = this;
           $.getJSON('../html/data.json', function(data){ 
             display_port.data = data;
+            display_port.data_point_array = [];
             display_port.draw();
           });
         },
@@ -48,42 +69,68 @@ $(function() {
                     
                     x_multiplier = display_port.width / 2.0;
                     y_multiplier = display_port.height / 2.0;
+                    
+                    x = x*x_multiplier;
+                    y = y*y_multiplier;
 
-                    var circle = display_port.drawer.circle(x*x_multiplier, y*y_multiplier, 2);
-                    circle.attr("stroke", d['color']);
-
-                    circle.node.id= d['id'];
-                    circle.node.onclick=function(){alert(this.id)};
+                    display_port.circle(x, y, display_port.circle_size, d['color']);
+                    display_port.data_point_array.push({
+                      "id": d['id'],
+                      "x": x,
+                      "y": y,
+                    });
                   });
               });
           });
         },
         
+        circle: function(x, y, thickness, color){
+          this.ctx.beginPath();
+          this.ctx.arc(x, y, thickness, 0, Math.PI*2, true); 
+          this.ctx.closePath();
+          this.ctx.strokeStyle = color;
+          this.ctx.stroke();
+        },
+        
         mousedown: function(event){
-          this.select_box.css({ "left":event.pageX , "top":event.pageY }).show();
+          this.drag_start_x = event.pageX;
+          this.drag_start_y = event.pageY;
           this.jQ.mousemove(this.mousemove);
         },
         
         mousemove: function(event){
-          var pos = this.select_box.position();
-          this.select_box.width(event.pageX - pos.left);
-          this.select_box.height(event.pageY - pos.top);
-          this.jQ.mouseup(this.mouseup);
+          if (this.is_real_drag(event)){
+            // start dragging the select_box.
+            this.select_box.css({ "left":this.drag_start_x , "top":this.drag_start_y, "width":0, "height":0 }).show();
+            this.select_box.width(event.pageX - this.drag_start_x);
+            this.select_box.height(event.pageY - this.drag_start_y);
+          }
         },
         
-        mouseup: function(event){
-          var pos = this.select_box.position();
-          var selected_rect = {
-            "left": pos.left,
-            "top": pos.top,
-            "right": pos.left + this.select_box.width(),
-            "bottom": pos.top + this.select_box.height()
-          };
-          this.select_box.hide();
-          alert("selected_rect: " + unpack(selected_rect));
+        is_real_drag: function(event){
+          var drag_x = Math.abs(event.pageX - this.drag_start_x);
+          var drag_y = Math.abs(event.pageY - this.drag_start_y);
+          return ((drag_x > this.non_drag_distance) && (drag_y > this.non_drag_distance))
+        },
+        
+        click: function(event){
+          var pos = this.jQ.position();
+          var click_x = (event.pageX - pos.left);
+          var click_y = (event.pageY - pos.top);
+          // cycle through points to see if we've clicked on one.
+          for (var i=0; i<this.data_point_array.length; i++){
+            var data_point = this.data_point_array[i];
+            if ((Math.abs(click_x - data_point['x']) < this.circle_size) && (Math.abs(click_y - data_point['y']) < this.circle_size)){
+              alert("id = " + data_point['id']);
+              break;
+            }
+          }
         }
+        
     });
-    
+  });
+  
+  $(window.data_displays).each(function(){
     this.init();
   });
 });
@@ -103,79 +150,3 @@ function unpack(obj, delimiter){
 	delimiter = delimiter || "\t";
 	return report.join(delimiter);
 }
-
-
-
-// 
-// 
-// canvas.zoom = function(){
-//   this.draw();
-// }
-
-// // Create select box
-// canvas.jQ.selectBox = $('<div/>')
-//          .appendTo(canvas.jQ)
-//          .attr('class', 'selector')
-//          .css('position', 'absolute');
-// 
-// canvas.jQ.mousedown(function (e) {
-//  canvas.jQ.showSelectBox(e);
-// });
-// 
-// canvas.jQ.mousemove(function (e) {
-//  canvas.jQ.refreshSelectBox(e);
-// });
-// 
-// // Shows the select box
-// canvas.jQ.showSelectBox = function (e) {
-//  if (parent.is('.' + config.disabledClass)) {
-//    return;
-//  }
-//   selectBoxOrigin = {}
-//  selectBoxOrigin.left  = e.pageX - parentDim.left + parent[0].scrollLeft;
-//  selectBoxOrigin.top   = e.pageY - parentDim.top + parent[0].scrollTop;
-// 
-//  var css = {
-//    left:   selectBoxOrigin.left + 'px', 
-//    top:    selectBoxOrigin.top + 'px', 
-//    width:    '1px', 
-//    height:   '1px'
-//  };
-//  selectBox.addClass(config.activeClass).css(css);
-// };
-// 
-// // Refreshes the select box dimensions and possibly position
-// canvas.jQ.refreshSelectBox = function (e) {
-// 
-//  var left    = e.pageX - parentDim.left + parent[0].scrollLeft;
-//  var top     = e.pageY - parentDim.top + parent[0].scrollTop;
-//  var newLeft   = left;
-//  var newTop    = top;
-//  var newWidth  = selectBoxOrigin.left - newLeft;
-//  var newHeight = selectBoxOrigin.top - newTop;
-// 
-//  if (left > selectBoxOrigin.left) {
-//    newLeft   = selectBoxOrigin.left;
-//    newWidth  = left - selectBoxOrigin.left;
-//  }
-// 
-//  if (top > selectBoxOrigin.top) {
-//    newTop    = selectBoxOrigin.top;
-//    newHeight = top - selectBoxOrigin.top;
-//  }
-// 
-//  var css = {
-//    left: newLeft + 'px', 
-//    top:  newTop + 'px', 
-//    width:  newWidth + 'px', 
-//    height: newHeight + 'px'
-//  };
-//  selectBox.css(css);
-// };
-// 
-// canvas.jQ.mouseup(function (e) {
-//  hideSelectBox(e);
-//   // pass info about our selection rect to the canvas & have it redraw itself.
-//  canvas.zoom();
-// });
-// 
