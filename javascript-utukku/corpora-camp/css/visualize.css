@@ -1,0 +1,27 @@
+.display_port{
+  width:1000px;
+  height:600px;
+  min-width:1000px;
+  min-height:600px;
+  border:1px solid gray;
+}
+
+.select_box{
+  background:rgba(255, 255, 255, 0.5);
+  border:1px solid rgba(128, 128, 128, 0.5);
+  position: absolute;
+  display: none;
+}
+
+.chunk_data {
+    position: absolute;
+    background-color: #fafad2;
+    max-width: 400px;
+    overflow: scroll; 
+}
+
+.close {
+    float: right;
+    font-weight: bold;
+    color: ff0000;
+}
