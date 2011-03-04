@@ -63,6 +63,30 @@ $(function() {
         draw: function(){
           this.ctx.clearRect(0, 0, this.width, this.height);
           var display_port = this;
+          
+          
+          // if there is a selected_rect, incorporate that into the multipliers.
+          var x_multiplier_adj = 1;
+          var y_multiplier_adj = 1;
+          if (display_port.selected_rect != null){
+            x_multiplier_adj = (display_port.width / display_port.select_box.width());
+            y_multiplier_adj = (display_port.height / display_port.select_box.height());
+          }
+          
+          // if there is a selected_rect, apply an offset based on its center.
+          var x_offset = 0;
+          var y_offset = 0;
+          if (display_port.selected_rect != null){
+            var display_port_pos = display_port.jQ.position();
+            var select_box_pos = display_port.select_box.position();
+            var select_box_center_x = select_box_pos.left + Math.floor(display_port.select_box.width()/2.0);
+            var select_box_center_y = select_box_pos.top + Math.floor(display_port.select_box.height()/2.0);
+            var display_port_center_x = display_port_pos.left + Math.floor(display_port.width/2.0);
+            var display_port_center_y = display_port_pos.top + Math.floor(display_port.height/2.0);
+            x_offset = ((display_port_center_x - select_box_center_x) * (display_port.width / display_port.select_box.width()));
+            y_offset = ((display_port_center_y - select_box_center_y) * (display_port.height / display_port.select_box.height()));
+          }
+          
           $.each(this.data, function(key, val) {
               $.each(val, function(a, b) {
                   $.each(b, function(c, d) {      
@@ -72,26 +96,11 @@ $(function() {
                     x_multiplier = display_port.width / 2.0;
                     y_multiplier = display_port.height / 2.0;
                     
-                    // if there is a selected_rect, incorporate that into the multipliers.
-                    if (display_port.selected_rect != null){
-                      x_multiplier = x_multiplier * (display_port.width / display_port.select_box.width());
-                      y_multiplier = y_multiplier * (display_port.height / display_port.select_box.height());
-                    }
+                    x = x * x_multiplier * x_multiplier_adj;
+                    y = y * y_multiplier * y_multiplier_adj;
                     
-                    x = x*x_multiplier;
-                    y = y*y_multiplier;
-                    
-                    // if there is a selected_rect, apply an offset based on its center.
-                    if (display_port.selected_rect != null){
-                      var display_port_pos = display_port.jQ.position();
-                      var select_box_pos = display_port.select_box.position();
-                      var select_box_center_x = select_box_pos.left + Math.floor(display_port.select_box.width()/2.0);
-                      var select_box_center_y = select_box_pos.top + Math.floor(display_port.select_box.height()/2.0);
-                      var display_port_center_x = display_port_pos.left + Math.floor(display_port.width/2.0);
-                      var display_port_center_y = display_port_pos.top + Math.floor(display_port.height/2.0);
-                      x = x - ((display_port_center_x - select_box_center_x) * (display_port.width / display_port.select_box.width()));
-                      y = y - ((display_port_center_y - select_box_center_y) * (display_port.height / display_port.select_box.height()));
-                    }
+                    x = x - x_offset;
+                    y = y - y_offset;
                     
                     display_port.circle(x, y, display_port.circle_size, d['color']);
                     
