@@ -82,17 +82,19 @@ $(function() {
                     y = y*y_multiplier;
                     
                     // if there is a selected_rect, apply an offset based on its center.
-                     // if (display_port.selected_rect != null){
-                     //   var select_box_pos = display_port.select_box.position();
-                     //   var select_box_center_x = select_box_pos.left + Math.int(display_port.select_box.width()/2.0);
-                     //   var select_box_center_y = select_box_pos.top + Math.int(display_port.select_box.height()/2.0);
-                     //   var display_port_center_x = display_port.left + Math.int(display_port.width/2.0);
-                     //   var display_port_center_y = display_port.top + Math.int(display_port.height/2.0);
-                     //   x = x + (display_port_center_x - select_box_center_x);
-                     //   y = y + (display_port_center_y - select_box_center_y);
-                     // }
-
+                    if (display_port.selected_rect != null){
+                      var display_port_pos = display_port.jQ.position();
+                      var select_box_pos = display_port.select_box.position();
+                      var select_box_center_x = select_box_pos.left + Math.floor(display_port.select_box.width()/2.0);
+                      var select_box_center_y = select_box_pos.top + Math.floor(display_port.select_box.height()/2.0);
+                      var display_port_center_x = display_port_pos.left + Math.floor(display_port.width/2.0);
+                      var display_port_center_y = display_port_pos.top + Math.floor(display_port.height/2.0);
+                      x = x - ((display_port_center_x - select_box_center_x) * (display_port.width / display_port.select_box.width()));
+                      y = y - ((display_port_center_y - select_box_center_y) * (display_port.height / display_port.select_box.height()));
+                    }
+                    
                     display_port.circle(x, y, display_port.circle_size, d['color']);
+                    
                     display_port.data_point_array.push({
                       "id": d['id'],
                       "x": x,
