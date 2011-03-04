@@ -6,7 +6,9 @@
   border:1px solid gray;
 }
 
-#select_box{
-  background:rgba(255, 255, 255, 0.33);
-  border:1px solid rgba(255, 255, 255, 0.67);
+.select_box{
+  background:rgba(255, 255, 255, 0.5);
+  border:1px solid rgba(0, 0, 0, 0.5);
+  position: absolute;
+  display: none;
 }

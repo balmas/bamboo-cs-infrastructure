@@ -5,21 +5,27 @@
 $(function() {
   window.data_displays = $(".display_port").each(function(){
     $.extend(this, {
-      // create a Raphael object based on the element
       jQ: null,
       data: null,
       drawer:null,
       width: 0,
       height: 0,
+      select_box: null,
       
         init: function(){
           // set up display drawing.
           this.jQ = $(this);
           this.width = this.jQ.width();
           this.height = this.jQ.height();
+          
+          // create a Raphael object based on the element
           this.drawer = Raphael(this, this.width, this.height);
+          
           // set up interaction.
-          this.jQ.mousedown(this.mousedown)
+          this.jQ.mousedown(this.mousedown);
+          this.jQ.append($('<div class="select_box" />'));
+          this.select_box = $('.select_box', this);
+          
           // get initial data.
           this.get_data();
         },
@@ -54,7 +60,27 @@ $(function() {
         },
         
         mousedown: function(event){
-          alert(unpack(event))
+          this.select_box.css({ "left":event.pageX , "top":event.pageY }).show();
+          this.jQ.mousemove(this.mousemove);
+        },
+        
+        mousemove: function(event){
+          var pos = this.select_box.position();
+          this.select_box.width(event.pageX - pos.left);
+          this.select_box.height(event.pageY - pos.top);
+          this.jQ.mouseup(this.mouseup);
+        },
+        
+        mouseup: function(event){
+          var pos = this.select_box.position();
+          var selected_rect = {
+            "left": pos.left,
+            "top": pos.top,
+            "right": pos.left + this.select_box.width(),
+            "bottom": pos.top + this.select_box.height()
+          };
+          this.select_box.hide();
+          alert("selected_rect: " + unpack(selected_rect));
         }
     });
     
