@@ -114,13 +114,16 @@ $(function() {
         },
         
         click: function(event){
+          // precaution.
+          this.jQ.unbind("mousemove");
+          
           var pos = this.jQ.position();
           var click_x = (event.pageX - pos.left);
           var click_y = (event.pageY - pos.top);
           // cycle through points to see if we've clicked on one.
           for (var i=0; i<this.data_point_array.length; i++){
             var data_point = this.data_point_array[i];
-            if ((Math.abs(click_x - data_point['x']) <= this.circle_size) && (Math.abs(click_y - data_point['y']) <= this.circle_size)){
+            if ((Math.abs(click_x - this.circle_size/2 - data_point['x']) <= this.circle_size) && (Math.abs(click_y - this.circle_size/2 - data_point['y']) <= this.circle_size)){
               alert("id = " + data_point['id']);
               break;
             }
