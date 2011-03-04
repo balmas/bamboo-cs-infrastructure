@@ -3,9 +3,15 @@
       <meta charset="utf-8">
       <meta http-equiv="Cache-Control" content="no-cache">
       <title>Woodchipper: Visualization</title>
-      <script src="../js/jquery.js"></script>
-      <script src="../js/utils.js"></script>
-      <script src="../js/woodchipper.js"></script>
+      <script src="../js/jquery.js" type="text/javascript"></script>          
+      <script src="../../lib/utukku.js" type="text/javascript"></script>
+      <script src="../../lib/engine.js" type="text/javascript"></script>
+      <script src="../../lib/client.js" type="text/javascript"></script>
+      <script type="text/javascript" src="../js/utils.js"></script>
+      <script type="text/javascript">
+        connect("ws://bamboo@ec2-184-72-169-149.compute-1.amazonaws.com:4242/");   
+      </script>            
+      <script src="../js/woodchipper.js"></script>      
       <link href="../css/visualize.css" media="screen" rel="stylesheet" type="text/css" />
   </head>
   

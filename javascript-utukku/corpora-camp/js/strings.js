@@ -1,6 +1,7 @@
 var labels = {
    'title': 'Title',
    'author': 'Author',
+   'keyword': 'Keyword',
    'topics': 'Topics',
    'year': 'Years',
    '_lucene': 'Lucene Query',

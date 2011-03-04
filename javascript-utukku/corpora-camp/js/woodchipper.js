@@ -2,7 +2,8 @@
  * jQuery initialization. Allow for multiple display ports on a page.
  * Each could have its own WebSocket connection. They could be spawned by queries, for visual comparisons.
  */
-$(function() {
+$(function() {              
+
   window.data_displays = $(".display_port").each(function(){
     $.extend(this, {
       jQ: null,
@@ -18,7 +19,7 @@ $(function() {
       selected_rect: null,
       data_point_array: [],
       
-        init: function(){
+        init: function(){          
           // set up display drawing.
           this.jQ = $(this);
           this.width = this.jQ.width();
@@ -53,11 +54,37 @@ $(function() {
       
         get_data: function(){
           var display_port = this;
+          var texts = get_parameters_by_name("textid");          
+          /*
+           * TODO replace this with a Utukku::Client call to get the 
+           * data from the server, sending in the list of text ids
+           * value of next and done arguments will depend upon what hte
+           * actual response will look like ... some augmentation to
+           * display_port.draw() may be necessary  
+           * it would also bee nice to add some detail about 
+           * the analysis to the display (e.g. texts, topics, counts, etc.)
+           *     $("#visualization_loading").css("display","block");
+           *       Utukku.Client.Function({
+           *         namespace: NS_COLLECTIONS,
+           *         name: "analyze",
+           *         args: texts,
+           *         next: display_port.draw(),
+           *         done: display_port.done(),
+           *       });
+           */
           $.getJSON('../html/data.json', function(data){ 
             display_port.data = data;
             display_port.data_point_array = [];
             display_port.draw();
           });
+        },
+        
+        /**
+         * handle for when all the data points have been drawn
+         */
+        done: function()
+        {
+            $("#visualization_loading").css("display","none");
         },
       
         draw: function(){
@@ -107,7 +134,7 @@ $(function() {
                     display_port.data_point_array.push({
                       "id": d['id'],
                       "x": x,
-                      "y": y,
+                      "y": y
                     });
                   });
               });
@@ -156,8 +183,8 @@ $(function() {
           // cycle through points to see if we've clicked on one.
           for (var i=0; i<this.data_point_array.length; i++){
             var data_point = this.data_point_array[i];
-            if ((Math.abs(click_x - this.circle_size/2 - data_point['x']) <= this.circle_size) && (Math.abs(click_y - this.circle_size/2 - data_point['y']) <= this.circle_size)){
-              alert("id = " + data_point['id']);
+            if ((Math.abs(click_x - this.circle_size/2 - data_point['x']) <= this.circle_size) && (Math.abs(click_y - this.circle_size/2 - data_point['y']) <= this.circle_size)){              
+              show_data(data_point['id'],click_x, click_y);
               break;
             }
           }
@@ -171,6 +198,41 @@ $(function() {
   });
 });
 
+/**
+ * show the data associated with a selected data point
+ * @param String a_id the id of the selected data point
+ * @param int a_x the x axis coordinate of the data point
+ * @param int a_y hte y axis coordinate of the data point
+ */
+function show_data(a_id, a_x, a_y)
+{   
+    // TODO replace this with an actual Utukku::Client request to switchboard to retrieve chunk
+    var data = {
+        url: 'http://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.01.0153%3Aspeech%3D12',
+        content: '<div class="chunk_data" id="chunk_' + a_id + '">' +
+                 '<div class="bibl">' +                 
+                 '<span class="author">Lysias, </span>' + 
+                 '<span class="title">Against Eratosthenes</span>' +
+                 '</div>' + 
+                 '<div class="content">' + 
+                 'οὐκ ἄρξασθαί μοι δοκεῖ ἄπορον εἶναι, ὦ ἄνδρες δικασταί, τῆς κατηγορίας, ἀλλὰ παύσασθαι λέγοντι: τοιαῦτα αὐτοῖς τὸ μέγεθος καὶ τοσαῦτα τὸ πλῆθος εἴργασται, ὥστε μήτ᾽ ἂν ψευδόμενον δεινότερα τῶν ὑπαρχόντων κατηγορῆσαι, μήτε τἀληθῆ βουλόμενον εἰπεῖν ἅπαντα δύνασθαι, ἀλλ᾽ ἀνάγκη ἢ τὸν κατήγορον ἀπειπεῖν ἢ τὸν χρόνον ἐπιλιπεῖν.' +
+                 '</div>' + 
+                 '</div>'                 
+    };       
+    // add the text chunk to the display, positioned at the point of the mouse click
+    $("body").append($(data.content));
+    $("#chunk_" + a_id).css("top",a_y);
+    $("#chunk_" + a_id).css("left",a_x);
+    // link to the source if we can
+    // TODO may need to construct the actual source url from separate metadata elements
+    if (data.url)
+    {
+        $("#chunk_" + a_id + " .title").wrap('<a class="sourcelink" href="' + data.url + '" target="_blank"></a>');
+    }
+    // add a close link which removes the text from the display
+    $('<a class="close" href="#">x</a>').click(
+        function() { $(this).parents(".chunk_data").remove(); }).prependTo($("#chunk_" + a_id));        
+}
 
 // Utils.
 

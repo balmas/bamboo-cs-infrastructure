@@ -113,7 +113,19 @@ Utukku.namespace('Client');
     if( !("timeOut" in options) ) {
       options.timeOut = 1000;
     }
-    if(!Utukku.Engine.has_handler(ns)) {
+    args = [ ]
+    $.each(options.args, function(idx, arg) {
+      if($.isArray(arg)) {
+        args[idx] = Utukku.Engine.ConstantIterator(arg);
+      }
+      else if($.isPlainObject(arg) && !arg['is_iterator'] || !$.isPlainObject(arg)) {
+        args[idx] = Utukku.Engine.ConstantIterator([arg]);
+      }
+      else {
+        args[idx] = arg;
+      }
+    });
+    if(!Utukku.Engine.has_handler(options.namespace)) {
       if( options.timeOut != 0 ) {
         setTimeout(function() { Client.Function(options) }, options.timeOut);
         return;
@@ -133,7 +145,7 @@ Utukku.namespace('Client');
       onSuccess: function(client) {
         var handler = Utukku.Engine.TagLib(options.namespace),
             iterator = handler.function_to_iterator(
-                         options.name, options.args
+                         options.name, args
                        );
         (iterator.async({
           next: options.next,
@@ -171,7 +183,32 @@ Utukku.namespace('Client');
 
     that.message = function(class, data) {
       if( class == 'flow.produce' ) {
-        $.each(data, function(idx, v) { callbacks.next(v); });
+        /* if v is an object, we want to clean it up and make a useful JS object */
+        $.each(data, function(idx, v) { 
+          if($.isPlainObject(v)) {
+            if(v.value) {
+              callbacks.next(v.value);
+            }
+            else {
+              obj = { }
+              $.each(v.children, function(idx,val) {
+                if((val.name in obj)) {
+                  if(!$.isArray(obj[val.name])) {
+                    obj[val.name] = [ obj[val.name] ];
+                  }
+                  obj[val.name].push(val.value);
+                }
+                else {
+                  obj[val.name] = val.value;
+                }
+              });
+              callbacks.next(obj);
+            }
+          }
+          else {
+            callbacks.next(v); 
+          }
+        });
       }
       else if( class == 'flow.produced' ) {
         callbacks.done();
@@ -184,12 +221,20 @@ Utukku.namespace('Client');
       client.deregister_flow(that);
     };
 
+    var encode = function(item) {
+      if( $.isPlainObject(item) ) {
+      }
+      else {
+        return item;
+      }
+    }; 
+
     that.run = function() {
       $.each(iterators, function(key, val) {
         (val.async({
           next: function(v) { 
             var its = { };
-            its[key] = v;
+            its[key] = encode(v);
             client.request('flow.provide', its, that.id);
           },
           done: function() {
