@@ -120,7 +120,7 @@ $(function() {
           // cycle through points to see if we've clicked on one.
           for (var i=0; i<this.data_point_array.length; i++){
             var data_point = this.data_point_array[i];
-            if ((Math.abs(click_x - data_point['x']) < this.circle_size) && (Math.abs(click_y - data_point['y']) < this.circle_size)){
+            if ((Math.abs(click_x - data_point['x']) <= this.circle_size) && (Math.abs(click_y - data_point['y']) <= this.circle_size)){
               alert("id = " + data_point['id']);
               break;
             }
