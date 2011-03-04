@@ -15,6 +15,7 @@ $(function() {
       width: 0,
       height: 0,
       select_box: null,
+      selected_rect: null,
       data_point_array: [],
       
         init: function(){
@@ -34,13 +35,13 @@ $(function() {
           this.select_box.mouseup(function(event){
             canvas.jQ.unbind("mousemove");
             canvas.select_box.hide();
-            var selected_rect = {
+            canvas.selected_rect = {
               "left": canvas.drag_start_x,
               "top": canvas.drag_start_y,
               "right": canvas.drag_start_x + canvas.select_box.width(),
               "bottom": canvas.drag_start_y + canvas.select_box.height()
             };
-            alert(unpack(selected_rect));
+            canvas.draw();
           });
           
           // set up click interaction (just one click handler for all points in canvas)
@@ -60,6 +61,7 @@ $(function() {
         },
       
         draw: function(){
+          this.ctx.clearRect(0, 0, this.width, this.height);
           var display_port = this;
           $.each(this.data, function(key, val) {
               $.each(val, function(a, b) {
@@ -70,8 +72,25 @@ $(function() {
                     x_multiplier = display_port.width / 2.0;
                     y_multiplier = display_port.height / 2.0;
                     
+                    // if there is a selected_rect, incorporate that into the multipliers.
+                    if (display_port.selected_rect != null){
+                      x_multiplier = x_multiplier * (display_port.width / display_port.select_box.width());
+                      y_multiplier = y_multiplier * (display_port.height / display_port.select_box.height());
+                    }
+                    
                     x = x*x_multiplier;
                     y = y*y_multiplier;
+                    
+                    // if there is a selected_rect, apply an offset based on its center.
+                     // if (display_port.selected_rect != null){
+                     //   var select_box_pos = display_port.select_box.position();
+                     //   var select_box_center_x = select_box_pos.left + Math.int(display_port.select_box.width()/2.0);
+                     //   var select_box_center_y = select_box_pos.top + Math.int(display_port.select_box.height()/2.0);
+                     //   var display_port_center_x = display_port.left + Math.int(display_port.width/2.0);
+                     //   var display_port_center_y = display_port.top + Math.int(display_port.height/2.0);
+                     //   x = x + (display_port_center_x - select_box_center_x);
+                     //   y = y + (display_port_center_y - select_box_center_y);
+                     // }
 
                     display_port.circle(x, y, display_port.circle_size, d['color']);
                     display_port.data_point_array.push({
@@ -82,6 +101,9 @@ $(function() {
                   });
               });
           });
+          
+          // require another selection to use this.
+          this.selected_rect = null;
         },
         
         circle: function(x, y, thickness, color){
